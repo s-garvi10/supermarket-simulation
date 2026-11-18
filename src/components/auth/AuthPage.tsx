@@ -31,7 +31,7 @@ const formCard: React.CSSProperties = {
 
 export const AuthPage: React.FC = () => {
   const { loginCashier, loginAdmin, loginCustomer, quickLogin } = useAuth();
-  const { customers, memberships, enrolMember } = useDatabase();
+  const { enrolMember } = useDatabase();
 
   const [activeTab, setActiveTab] = useState<AuthTab>('customer');
   const isDev = import.meta.env.DEV;
@@ -116,36 +116,6 @@ export const AuthPage: React.FC = () => {
                 </Field>
                 <Button type="submit" style={{ width: '100%' }}>Sign in</Button>
               </form>
-
-              {customers.length > 0 && (
-                <div style={sep}>
-                  <p style={{ fontSize: 11, color: 'var(--ink-muted)', margin: '0 0 10px', letterSpacing: '0.03em', textTransform: 'uppercase' }}>
-                    Active loyalty accounts (from database)
-                  </p>
-                  {customers.slice(0, 4).map(c => {
-                    const mem = memberships.find(m => m.customer_id === c.customer_id);
-                    return (
-                      <button
-                        key={c.customer_id}
-                        type="button"
-                        onClick={() => setCustomerPhone(c.phone)}
-                        style={{
-                          display: 'block', width: '100%', textAlign: 'left',
-                          background: 'none', border: 'none', cursor: 'pointer',
-                          padding: '6px 0', fontSize: 12,
-                          color: 'var(--ink-muted)',
-                          fontFamily: 'var(--font-sans)',
-                          transition: 'color var(--transition-fast)',
-                        }}
-                        onMouseEnter={e => e.currentTarget.style.color = 'var(--accent)'}
-                        onMouseLeave={e => e.currentTarget.style.color = 'var(--ink-muted)'}
-                      >
-                        {c.name}, {c.phone}, {mem?.points ?? 0} points
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
             </div>
           )}
 

@@ -59,10 +59,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ onNavigateTab })
           <div>
             <div className="text-xs font-bold text-slate-500 uppercase tracking-wider">Enrolled Members</div>
             <div className="text-2xl font-black font-mono text-slate-900 mt-1">{totalCustomers}</div>
-            <div className="text-[11px] text-emerald-600 font-semibold flex items-center gap-1 mt-1">
-              <ArrowUpRight className="w-3.5 h-3.5" />
-              <span>Active loyalty program</span>
-            </div>
+
           </div>
           <div className="w-12 h-12 rounded-xl bg-purple-50 text-purple-700 flex items-center justify-center">
             <Users className="w-6 h-6" />
