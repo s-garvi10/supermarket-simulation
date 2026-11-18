@@ -1,0 +1,24 @@
+:root {
+  /* Palette */
+  --bg: #FAF8F4;
+  --surface: #FFFFFF;
+  --ink: #1A1A17;
+  --ink-muted: #6B675F;
+  --border: #E6E1D8;
+  --accent: #1F5A3D;
+  --accent-hover: #17462F;
+  --error: #9E2A2B;
+  --error-bg: #FAF0F0;
+  --error-border: #F0CECE;
+
+  /* Geometry & Elevation */
+  --radius: 6px;
+
+  /* Typography */
+  --font-serif: 'Newsreader', Georgia, 'Times New Roman', serif;
+  --font-sans: 'DM Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --font-mono: ui-monospace, 'SFMono-Regular', Menlo, Monaco, Consolas, 'JetBrains Mono', monospace;
+
+  /* Motion */
+  --transition-fast: 140ms ease;
+}
