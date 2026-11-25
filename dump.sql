@@ -1,12 +1,4 @@
---
--- PostgreSQL database dump
---
-
 \restrict b4BDKyhVYC5wpuCLhoe9kgQOa6PJURg5EZtYUTWzfTWyIyw0Gepxqyqz5KMtrU7
-
--- Dumped from database version 18.6
--- Dumped by pg_dump version 18.6
-
 SET statement_timeout = 0;
 SET lock_timeout = 0;
 SET idle_in_transaction_session_timeout = 0;
@@ -18,11 +10,6 @@ SET check_function_bodies = false;
 SET xmloption = content;
 SET client_min_messages = warning;
 SET row_security = off;
-
---
--- Name: fn_calculate_tier(integer); Type: FUNCTION; Schema: public; Owner: -
---
-
 CREATE FUNCTION public.fn_calculate_tier(p_points integer) RETURNS character varying
     LANGUAGE plpgsql IMMUTABLE
     AS $$
@@ -36,12 +23,6 @@ BEGIN
     END IF;
 END;
 $$;
-
-
---
--- Name: fn_enrol_member(character varying, character varying, character varying, character varying, character varying, character varying); Type: FUNCTION; Schema: public; Owner: -
---
-
 CREATE FUNCTION public.fn_enrol_member(p_customer_id character varying, p_membership_id character varying, p_card_number character varying, p_name character varying, p_email character varying, p_phone character varying) RETURNS TABLE(customer_id character varying, card_number character varying, tier character varying, points integer)
     LANGUAGE plpgsql
     AS $$
@@ -59,12 +40,6 @@ BEGIN
     WHERE c.customer_id = p_customer_id;
 END;
 $$;
-
-
---
--- Name: fn_trg_award_purchase_points(); Type: FUNCTION; Schema: public; Owner: -
---
-
 CREATE FUNCTION public.fn_trg_award_purchase_points() RETURNS trigger
     LANGUAGE plpgsql
     AS $$
@@ -72,7 +47,6 @@ DECLARE
     v_new_points INTEGER;
     v_new_tier VARCHAR(20);
 BEGIN
-    -- Only process if purchase is associated with a registered loyalty member
     IF NEW.customer_id IS NOT NULL AND NEW.points_earned > 0 THEN
         UPDATE memberships
         SET points = points + NEW.points_earned,
@@ -87,12 +61,6 @@ BEGIN
     RETURN NEW;
 END;
 $$;
-
-
---
--- Name: sp_redeem_reward(character varying, character varying, character varying, character varying, character varying, text); Type: PROCEDURE; Schema: public; Owner: -
---
-
 CREATE PROCEDURE public.sp_redeem_reward(IN p_redemption_id character varying, IN p_customer_id character varying, IN p_reward_id character varying, IN p_voucher_code character varying, INOUT p_status character varying DEFAULT 'FAILED'::character varying, INOUT p_message text DEFAULT ''::text)
     LANGUAGE plpgsql
     AS $$
@@ -102,7 +70,6 @@ DECLARE
     v_reward_name VARCHAR(120);
     v_is_active BOOLEAN;
 BEGIN
-    -- 1. Check if reward exists and is active
     SELECT name, points_cost, is_active
     INTO v_reward_name, v_reward_cost, v_is_active
     FROM rewards
@@ -119,8 +86,6 @@ BEGIN
         p_message := 'This reward is currently inactive.';
         RETURN;
     END IF;
-
-    -- 2. Lock membership row for update to prevent concurrent race conditions
     SELECT points INTO v_member_points
     FROM memberships
     WHERE customer_id = p_customer_id
@@ -131,21 +96,17 @@ BEGIN
         p_message := 'Loyalty membership record not found for customer.';
         RETURN;
     END IF;
-
-    -- 3. Check sufficient points balance
     IF v_member_points < v_reward_cost THEN
         p_status := 'INSUFFICIENT_PTS';
         p_message := format('Insufficient points. Required: %s, Available: %s', v_reward_cost, v_member_points);
         RETURN;
     END IF;
 
-    -- 4. Deduct points and recalculate tier
     UPDATE memberships
     SET points = points - v_reward_cost,
         tier = fn_calculate_tier(points - v_reward_cost)
     WHERE customer_id = p_customer_id;
 
-    -- 5. Record redemption voucher
     INSERT INTO redemptions (
         redemption_id,
         customer_id,
@@ -170,16 +131,8 @@ BEGIN
     p_message := format('Voucher %s issued successfully! %s points deducted.', p_voucher_code, v_reward_cost);
 END;
 $$;
-
-
 SET default_tablespace = '';
-
 SET default_table_access_method = heap;
-
---
--- Name: customers; Type: TABLE; Schema: public; Owner: -
---
-
 CREATE TABLE public.customers (
     customer_id character varying(50) NOT NULL,
     name character varying(100) NOT NULL,
@@ -187,12 +140,6 @@ CREATE TABLE public.customers (
     phone character varying(20) NOT NULL,
     created_at timestamp with time zone DEFAULT CURRENT_TIMESTAMP
 );
-
-
---
--- Name: memberships; Type: TABLE; Schema: public; Owner: -
---
-
 CREATE TABLE public.memberships (
     membership_id character varying(50) NOT NULL,
     customer_id character varying(50) NOT NULL,
@@ -203,12 +150,6 @@ CREATE TABLE public.memberships (
     CONSTRAINT memberships_points_check CHECK ((points >= 0)),
     CONSTRAINT memberships_tier_check CHECK (((tier)::text = ANY ((ARRAY['Silver'::character varying, 'Gold'::character varying, 'Platinum'::character varying])::text[])))
 );
-
-
---
--- Name: purchases; Type: TABLE; Schema: public; Owner: -
---
-
 CREATE TABLE public.purchases (
     purchase_id character varying(50) NOT NULL,
     customer_id character varying(50),
@@ -231,12 +172,6 @@ CREATE TABLE public.purchases (
     CONSTRAINT purchases_points_earned_check CHECK ((points_earned >= 0)),
     CONSTRAINT purchases_total_amount_check CHECK ((total_amount >= (0)::numeric))
 );
-
-
---
--- Name: redemptions; Type: TABLE; Schema: public; Owner: -
---
-
 CREATE TABLE public.redemptions (
     redemption_id character varying(50) NOT NULL,
     customer_id character varying(50) NOT NULL,
@@ -249,12 +184,6 @@ CREATE TABLE public.redemptions (
     CONSTRAINT redemptions_points_spent_check CHECK ((points_spent > 0)),
     CONSTRAINT redemptions_status_check CHECK (((status)::text = ANY ((ARRAY['available'::character varying, 'used'::character varying])::text[])))
 );
-
-
---
--- Name: rewards; Type: TABLE; Schema: public; Owner: -
---
-
 CREATE TABLE public.rewards (
     reward_id character varying(50) NOT NULL,
     name character varying(120) NOT NULL,
@@ -265,11 +194,6 @@ CREATE TABLE public.rewards (
     CONSTRAINT rewards_discount_check CHECK ((discount >= (0)::numeric)),
     CONSTRAINT rewards_points_cost_check CHECK ((points_cost > 0))
 );
-
-
---
--- Data for Name: customers; Type: TABLE DATA; Schema: public; Owner: -
---
 
 COPY public.customers (customer_id, name, email, phone, created_at) FROM stdin;
 cust_1795012661899	sharky	8851735975@loyalty.freshmart.com	8851735975	2026-11-18 20:07:41.900579+05:30
